@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin</title>
+</head>
+<body>
+
+<h1>ADMIN PAGE</h1>
+
+<!-- ===== ФОРМА (create + update) ===== -->
+<form th:action="@{/admin}" th:object="${user}" method="post">
+
+    <!-- id для update -->
+    <input type="hidden" id="id" th:field="*{id}"/>
+
+    <div>
+        Email:
+        <input id="email" th:field="*{email}"/>
+        <div style="color:red"
+             th:if="${#fields.hasErrors('email')}"
+             th:errors="*{email}">
+        </div>
+    </div>
+
+    <div>
+        First Name:
+        <input id="firstName" th:field="*{firstName}"/>
+        <div style="color:red"
+             th:if="${#fields.hasErrors('firstName')}"
+             th:errors="*{firstName}">
+        </div>
+    </div>
+
+    <div>
+        Last Name:
+        <input id="lastName" th:field="*{lastName}"/>
+        <div style="color:red"
+             th:if="${#fields.hasErrors('lastName')}"
+             th:errors="*{lastName}">
+        </div>
+    </div>
+
+    <div>
+        Password:
+        <input id="password" type="password" th:field="*{password}"/>
+        <div style="color:red"
+             th:if="${#fields.hasErrors('password')}"
+             th:errors="*{password}">
+        </div>
+    </div>
+    <div>
+        Roles:
+        <div th:each="role : ${roles}">
+            <input type="checkbox"
+                   th:value="${role.id}"
+                   th:field="*{roles}"/>
+            <span th:text="${role.name}"></span>
+        </div>
+    </div>
+    <button type="submit">Save</button>
+</form>
+
+<hr>
+
+<!-- ===== ТАБЛИЦА ===== -->
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Email</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Actions</th>
+    </tr>
+
+    <tr th:each="user : ${users}">
+        <td th:text="${user.id}"></td>
+        <td th:text="${user.email}"></td>
+        <td th:text="${user.firstName}"></td>
+        <td th:text="${user.lastName}"></td>
+
+        <td>
+            <!-- EDIT -->
+            <button type="button"
+                    th:attr="
+                        data-id=${user.id},
+                        data-email=${user.email},
+                        data-firstname=${user.firstName},
+                        data-lastname=${user.lastName}"
+                    onclick="fillForm(this)">
+                Edit
+            </button>
+
+            <!-- DELETE -->
+            <form th:action="@{/admin/delete}" method="post" style="display:inline;">
+                <input type="hidden" name="id" th:value="${user.id}"/>
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+    </tr>
+</table>
+
+<!-- ===== JS ===== -->
+<script>
+    function fillForm(button) {
+        document.getElementById('id').value = button.dataset.id;
+        document.getElementById('email').value = button.dataset.email;
+        document.getElementById('firstName').value = button.dataset.firstname;
+        document.getElementById('lastName').value = button.dataset.lastname;
+
+        // пароль не подставляем
+        document.getElementById('password').value = "";
+    }
+</script>
+
+</body>
+</html>
