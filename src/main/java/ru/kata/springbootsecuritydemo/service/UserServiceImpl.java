@@ -30,12 +30,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return users.subList(0, count);
 
     }
+
     public User getUserByMail(String email) { return userRepository.findByEmail(email);}
     @Override
     public void save(User user){
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
+
     @Transactional(readOnly = true)
     @Override
     public User getUserById(Long id) {
@@ -46,12 +48,18 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         userRepository.deleteById(id);
     }
 
+    @Transactional
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(username);
         if (user == null) {
             throw new UsernameNotFoundException("пользователь не найден: " + username);
         }
+        user.getRoles().size();
         return user;
+    }
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 }
