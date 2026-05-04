@@ -56,4 +56,9 @@ public class AdminController {
         userService.delete(id);
         return "redirect:/admin";
     }
+    @PostMapping("/update")
+    public String updateUser(@ModelAttribute User user) {
+        userService.update(user);
+        return "redirect:/admin";
+    }
 }
