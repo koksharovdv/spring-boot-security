@@ -18,4 +18,6 @@ public interface UserService extends UserDetailsService {
     User getUserByEmail(String email);
 
     void update(User user);
+
+    List<User> getUsers();
 }

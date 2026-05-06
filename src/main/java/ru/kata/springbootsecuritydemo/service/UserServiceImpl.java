@@ -6,18 +6,25 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.kata.springbootsecuritydemo.model.Role;
 import ru.kata.springbootsecuritydemo.model.User;
+import ru.kata.springbootsecuritydemo.repository.RoleRepository;
 import ru.kata.springbootsecuritydemo.repository.UserRepository;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private RoleRepository roleRepository;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
     }
 
     @Transactional(readOnly = true)
@@ -35,6 +42,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public void save(User user){
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        Set<Role> roles = user.getRoles().stream()
+
+                .map(role -> roleRepository.findById(role.getId()).orElseThrow())
+
+                .collect(Collectors.toSet());
+
+        user.setRoles(roles);
         userRepository.save(user);
     }
 
@@ -64,5 +79,20 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public void update(User user) {userRepository.save(user);}
+    public void update(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        Set<Role> roles = user.getRoles().stream()
+
+                .map(role -> roleRepository.findById(role.getId()).orElseThrow())
+
+                .collect(Collectors.toSet());
+
+        user.setRoles(roles);
+        userRepository.save(user);}
+
+    @Override
+    public List<User> getUsers() {
+        return userRepository.findAll();
+    }
 }
