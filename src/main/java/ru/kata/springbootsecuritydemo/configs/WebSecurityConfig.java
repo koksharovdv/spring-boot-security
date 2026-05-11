@@ -10,7 +10,7 @@ import ru.kata.springbootsecuritydemo.service.UserService;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig {
+public class  WebSecurityConfig {
     private final UserService userService;
     private final SuccessUserHandler successUserHandler;
 
@@ -29,6 +29,8 @@ public class WebSecurityConfig {
                         .requestMatchers("/", "/login").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
