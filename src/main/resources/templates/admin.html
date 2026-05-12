@@ -166,333 +166,279 @@
 
 <script>
 
-    const table =
-        document.getElementById("usersTable");
+    const API = "/api/admin";
+    const table = document.getElementById("usersTable");
+
+    let editModal;
 
 
 
-    // LOAD USERS
-    function loadUsers() {
+    document.addEventListener("DOMContentLoaded", () => {
 
-        fetch("/api/admin")
+        editModal = new bootstrap.Modal(
+            document.getElementById("editModal")
+        );
 
-            .then(res => res.json())
+        loadUsers();
 
-            .then(users => {
-
-                table.innerHTML = "";
-
-
-                users.forEach(user => {
-
-                    let roles =
-                        user.roles
-                            .map(r => r.name)
-                            .join(" ");
+    });
 
 
-                    let row = `
 
-                        <tr>
+    function rolesToString(roles) {
 
-                            <td>${user.id}</td>
+        return roles
+            .map(role => role.name)
+            .join(" ");
 
-                            <td>${user.email}</td>
-
-                            <td>${user.firstName}</td>
-
-                            <td>${user.lastName}</td>
-
-                            <td>${roles}</td>
+    }
 
 
-                            <td>
 
-                                <button
-                                    class="btn btn-info btn-sm"
+    function getSelectedRoles(selectId) {
 
-                                    onclick='openEdit(
-                                        ${user.id},
-                                        "${user.firstName}",
-                                        "${user.lastName}",
-                                        "${user.email}",
-                                        ${JSON.stringify(user.roles)}
-                                    )'>
+        return Array.from(
+            document.getElementById(selectId).selectedOptions
+        ).map(option => ({
+            id: Number(option.value)
+        }));
 
-                                    Edit
-
-                                </button>
-
-                            </td>
+    }
 
 
-                            <td>
 
-                                <button
-                                    class="btn btn-danger btn-sm"
+    function clearCreateForm() {
 
-                                    onclick="deleteUser(${user.id})">
+        document.getElementById("firstName").value = "";
+        document.getElementById("lastName").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("password").value = "";
 
-                                    Delete
-
-                                </button>
-
-                            </td>
-
-                        </tr>
-
-                    `;
+    }
 
 
-                    table.insertAdjacentHTML(
-                        "beforeend",
-                        row
-                    );
 
-                });
+    async function loadUsers() {
+
+        try {
+
+            const response =
+                await fetch(API);
+
+            const users =
+                await response.json();
+
+
+            table.innerHTML = "";
+
+
+            users.forEach(user => {
+
+                const row = `
+
+                    <tr>
+
+                        <td>${user.id}</td>
+                        <td>${user.email}</td>
+                        <td>${user.firstName}</td>
+                        <td>${user.lastName}</td>
+                        <td>${rolesToString(user.roles)}</td>
+
+                        <td>
+
+                            <button
+                                class="btn btn-info btn-sm"
+                                onclick='openEdit(${JSON.stringify(user)})'>
+
+                                Edit
+
+                            </button>
+
+                        </td>
+
+                        <td>
+
+                            <button
+                                class="btn btn-danger btn-sm"
+                                onclick="deleteUser(${user.id})">
+
+                                Delete
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+
+                table.insertAdjacentHTML(
+                    "beforeend",
+                    row
+                );
 
             });
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "LOAD ERROR:",
+                error
+            );
+
+        }
 
     }
 
 
 
 
-    // CREATE
-    function createUser() {
+    async function createUser() {
 
-        let roles =
-            Array.from(
-                document.getElementById(
-                    "roles"
-                ).selectedOptions
-            )
-
-                .map(option => ({
-                    id: option.value
-                }));
-
-
-        let user = {
+        const user = {
 
             firstName:
-            document.getElementById(
-                "firstName"
-            ).value,
-
+            document.getElementById("firstName").value,
 
             lastName:
-            document.getElementById(
-                "lastName"
-            ).value,
-
+            document.getElementById("lastName").value,
 
             email:
-            document.getElementById(
-                "email"
-            ).value,
-
+            document.getElementById("email").value,
 
             password:
-            document.getElementById(
-                "password"
-            ).value,
+            document.getElementById("password").value,
 
-
-            roles: roles
+            roles:
+                getSelectedRoles("roles")
 
         };
 
 
-        fetch("/api/admin", {
+        await fetch(API, {
 
             method: "POST",
 
             headers: {
-                "Content-Type":
-                    "application/json"
+                "Content-Type": "application/json"
             },
 
-            body:
-                JSON.stringify(user)
+            body: JSON.stringify(user)
 
-        })
+        });
 
-            .then(() => {
 
-                loadUsers();
+        clearCreateForm();
 
-            });
+        await loadUsers();
 
     }
 
 
 
 
-    // DELETE
-    function deleteUser(id) {
+    async function deleteUser(id) {
 
-        fetch(`/api/admin/${id}`, {
+        await fetch(`${API}/${id}`, {
 
             method: "DELETE"
 
-        })
+        });
 
-            .then(() => {
 
-                loadUsers();
-
-            });
+        await loadUsers();
 
     }
 
 
 
 
-    // OPEN EDIT
-    function openEdit(
-        id,
-        firstName,
-        lastName,
-        email,
-        roles
-    ) {
+    function openEdit(user) {
 
-        document.getElementById(
-            "editId"
-        ).value = id;
+        document.getElementById("editId").value =
+            user.id;
 
+        document.getElementById("editFirstName").value =
+            user.firstName;
 
-        document.getElementById(
-            "editFirstName"
-        ).value = firstName;
+        document.getElementById("editLastName").value =
+            user.lastName;
+
+        document.getElementById("editEmail").value =
+            user.email;
 
 
-        document.getElementById(
-            "editLastName"
-        ).value = lastName;
+        const select =
+            document.getElementById("editRoles");
 
 
-        document.getElementById(
-            "editEmail"
-        ).value = email;
-
-
-        let select =
-            document.getElementById(
-                "editRoles"
-            );
-
-
-        Array.from(
-            select.options
-        )
-
+        Array.from(select.options)
             .forEach(option => {
 
                 option.selected =
-                    roles.some(role =>
-                        role.id == option.value
+                    user.roles.some(
+                        role => role.id == option.value
                     );
 
             });
 
 
-        new bootstrap.Modal(
-
-            document.getElementById(
-                "editModal"
-            )
-
-        ).show();
+        editModal.show();
 
     }
 
 
 
 
-    // UPDATE
-    function updateUser() {
+    async function updateUser() {
 
-        let id =
-            document.getElementById(
-                "editId"
-            ).value;
+        const id =
+            document.getElementById("editId").value;
 
 
-        let roles =
-            Array.from(
-                document.getElementById(
-                    "editRoles"
-                ).selectedOptions
-            )
-
-                .map(option => ({
-                    id: option.value
-                }));
-
-
-        let user = {
+        const user = {
 
             id: id,
 
-
             firstName:
-            document.getElementById(
-                "editFirstName"
-            ).value,
-
+            document.getElementById("editFirstName").value,
 
             lastName:
-            document.getElementById(
-                "editLastName"
-            ).value,
-
+            document.getElementById("editLastName").value,
 
             email:
-            document.getElementById(
-                "editEmail"
-            ).value,
-
+            document.getElementById("editEmail").value,
 
             password:
-            document.getElementById(
-                "editPassword"
-            ).value,
+            document.getElementById("editPassword").value,
 
-
-            roles: roles
+            roles:
+                getSelectedRoles("editRoles")
 
         };
 
 
-        fetch(`/api/admin/${id}`, {
+        await fetch(`${API}/${id}`, {
 
             method: "PUT",
 
             headers: {
-                "Content-Type":
-                    "application/json"
+                "Content-Type": "application/json"
             },
 
-            body:
-                JSON.stringify(user)
+            body: JSON.stringify(user)
 
-        })
+        });
 
-            .then(() => {
 
-                loadUsers();
+        editModal.hide();
 
-            });
+        await loadUsers();
 
     }
-
-
-
-
-    // INIT
-    loadUsers();
 
 </script>
 
